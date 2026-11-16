@@ -405,8 +405,7 @@ code { font-family: var(--font-mono); font-size: .88em; background: var(--bone-2
 .empty { border: 1px dashed var(--line); border-radius: 16px; padding: 48px 28px; text-align: center; background: #fffdf8; }
 .empty__title { font-family: var(--font-display); color: var(--espresso); font-weight: 600; font-size: 1.25rem; margin-bottom: 7px; }
 .empty__body { color: var(--mute); font-size: .95rem; }
-.empty .btn { margin-top: 20px; }
-.empty .btn { max-width: 220px; margin-left: auto; margin-right: auto; display: block; }
+.empty .btn { max-width: 220px; margin: 20px auto 0; display: block; }
 
 /* ── method ──────────────────────────────────────────────────────────── */
 .method { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 26px 28px 0; }
