@@ -24,6 +24,9 @@ eval/results.json
 # ---- Local logs ----
 *.log
 
+# ---- Generated test images ----
+samples/_test_*.png
+
 # ---- Streamlit ----
 .streamlit/secrets.toml
 
