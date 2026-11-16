@@ -70,6 +70,45 @@ def test_summary_empty_is_safe():
     assert s["avg_kcal"] == 0.0
 
 
+def test_folder_eval_iterates(tmp_path=None):
+    """The --folder evaluator reads eval_set/<dish>/*.jpg without the model."""
+    import tempfile
+    from pathlib import Path as _P
+
+    from PIL import Image
+
+    from eval.evaluate import _iter_folder
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = _P(tmp)
+        for dish in ("pizza", "sushi"):
+            d = root / dish
+            d.mkdir()
+            Image.new("RGB", (32, 32), (200, 120, 60)).save(d / "a.jpg")
+            Image.new("RGB", (32, 32), (60, 120, 200)).save(d / "b.png")
+
+        rows = list(_iter_folder(root))
+        assert len(rows) == 4, rows
+        truths = {t for _, t in rows}
+        assert truths == {"pizza", "sushi"}, truths
+        img, truth = rows[0]
+        assert img.mode == "RGB"
+
+
+def test_ignore_non_images_in_folder():
+    import tempfile
+    from pathlib import Path as _P
+
+    from eval.evaluate import _iter_folder
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = _P(tmp)
+        d = root / "ramen"
+        d.mkdir()
+        (d / "notes.txt").write_text("not an image")
+        assert list(_iter_folder(root)) == []
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0
