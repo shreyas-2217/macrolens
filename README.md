@@ -51,6 +51,24 @@ streamlit run app/streamlit_app.py
 
 The first classification downloads the pretrained model (~350 MB), then caches it.
 
+### See the dashboard instantly
+
+The analysis half doesn't need a single photo. Seed it with demo meals:
+
+```bash
+python -m scripts.seed_demo     # fills logs with 40 meals across 14 days
+streamlit run app/streamlit_app.py
+```
+
+Then open the **Patterns** tab for daily calories, macro split, and top dishes.
+
+### Tests
+
+```bash
+python tests/test_core.py       # 8 unit tests, no torch needed
+python eval/smoke_test.py       # end-to-end plumbing check
+```
+
 ## Measure it (the differentiator)
 
 ```bash
@@ -74,6 +92,10 @@ macrolens/
 ├── eval/
 │   ├── evaluate.py          # accuracy harness (Food-101 test set)
 │   └── smoke_test.py        # fast plumbing checks, no model
+├── tests/test_core.py       # unit tests (no torch)
+├── scripts/
+│   ├── seed_demo.py         # fill the log with demo meals
+│   └── verify_classify.py   # end-to-end single-image check
 ├── data/nutrition_map.csv   # 101 dishes → per-serving macros
 ├── samples/                 # drop a few meal photos here
 └── notebooks/               # scratchpad

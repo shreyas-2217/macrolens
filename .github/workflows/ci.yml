@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install lightweight deps (no torch needed for these tests)
+        run: pip install duckdb pandas numpy
+      - name: Core tests
+        run: python tests/test_core.py
+      - name: Smoke test
+        run: python eval/smoke_test.py
