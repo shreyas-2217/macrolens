@@ -21,6 +21,9 @@ models/
 # ---- Eval output (regenerate via eval/evaluate.py) ----
 eval/results.json
 
+# ---- Local logs ----
+*.log
+
 # ---- Streamlit ----
 .streamlit/secrets.toml
 
