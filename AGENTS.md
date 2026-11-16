@@ -41,9 +41,14 @@ python -m uvicorn server.app:app --reload --port 8000
 ## Frontend notes
 
 - `web/app.js` is vanilla JS, no build step. Keep it that way.
-- The **belief strip** (`.belief__*`) and **range bars** (`.rangebar`) are the
-  signature elements — they are the project's thesis made visible. Don't
-  simplify a range into a single number anywhere in the UI.
+- The **belief strip** (`.belief__*`) and the **measured gauge** (`.gauge__*`,
+  with its `.gauge__band` tolerance and `.gauge__needle`) are the signature
+  elements — they are the project's thesis made visible. Don't simplify a
+  range into a single number anywhere in the UI.
+- Palette tokens live at the top of `web/styles.css` ("The Kitchen Ticket"):
+  bone paper, espresso ink, olive = confident, saffron = doubt. Keep new
+  colours derived from that set, and re-check contrast (all views must stay
+  Lighthouse accessibility 100).
 - Confidence threshold lives in `server/app.py` (`CONFIDENCE_THRESHOLD`); the
   nutrition uncertainty constant lives in `src/nutrition.py`.
 

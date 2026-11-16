@@ -16,10 +16,11 @@ const state = {
 };
 
 const MACRO_META = {
-  kcal:      { key: "Calories", unit: "kcal", big: true },
-  protein_g: { key: "Protein",  unit: "g" },
-  carbs_g:   { key: "Carbs",    unit: "g" },
-  fat_g:     { key: "Fat",      unit: "g" },
+  // ref = a typical per-serving ceiling, so the gauge has an honest scale
+  kcal:      { key: "Calories", unit: "kcal", ref: 800, big: true },
+  protein_g: { key: "Protein",  unit: "g",    ref: 60 },
+  carbs_g:   { key: "Carbs",    unit: "g",    ref: 100 },
+  fat_g:     { key: "Fat",      unit: "g",    ref: 50 },
 };
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
@@ -153,7 +154,7 @@ function renderResult() {
   const legend = predictions
     .map((p, i) =>
       i === 0
-        ? `<span class="belief__item"><span class="belief__swatch" style="background:var(--confirm)"></span>${esc(title(p.label))} ${(p.score * 100).toFixed(0)}%</span>`
+        ? `<span class="belief__item"><span class="belief__swatch" style="background:var(--olive)"></span>${esc(title(p.label))} ${(p.score * 100).toFixed(0)}%</span>`
         : i < 3
         ? `<span class="belief__item belief__item--muted">${esc(title(p.label))} ${(p.score * 100).toFixed(0)}%</span>`
         : ""
@@ -208,17 +209,31 @@ function renderLabel() {
     const v = m.values[k];
     const band = m.ranges[k];
     if (v == null) return "";
-    let bar = "";
+    const ref = meta.ref;
+
     let valHtml = `<b>${Math.round(v)}</b> <small>${meta.unit}</small>`;
+    let gaugeHtml = "";
     if (band) {
-      // range bar: mid marker positioned within a full-width band
-      bar = `<div class="rangebar"><div class="rangebar__mid" style="left:50%"></div></div>`;
       valHtml = `<b>${Math.round(band[0])}–${Math.round(band[1])}</b> <small>${meta.unit}</small>`;
+      const lo = Math.max(0, Math.min(100, (band[0] / ref) * 100));
+      const hi = Math.max(0, Math.min(100, (band[1] / ref) * 100));
+      const mid = Math.max(0, Math.min(100, (v / ref) * 100));
+      gaugeHtml = `<div class="gauge" role="img" aria-label="${meta.key} between ${Math.round(band[0])} and ${Math.round(band[1])} ${meta.unit}">
+          <div class="gauge__track">
+            <div class="gauge__band" style="left:${lo}%;right:${100 - hi}%"></div>
+            <div class="gauge__needle" style="left:${mid}%"></div>
+          </div>
+        </div>`;
+    } else {
+      // no band (rare): show the single filled value as a plain bar
+      const pct = Math.max(2, Math.min(100, (v / ref) * 100));
+      gaugeHtml = `<div class="gauge"><div class="gauge__track"><div class="gauge__band" style="left:0;right:${100 - pct}%"></div></div></div>`;
     }
+
     return `<div class="label__row">
         <span class="label__key">${meta.key}</span>
-        <span class="label__val">${valHtml}</span>
-      </div>${bar ? `<div class="label__row" style="padding-top:0;border-bottom:0"><span></span><span style="grid-column:1/3">${bar}</span></div>` : ""}`;
+        <span class="label__fig">${gaugeHtml}<span class="label__val">${valHtml}</span></span>
+      </div>`;
   }).join("");
 
   mount.innerHTML = `
@@ -261,7 +276,7 @@ function openDishPicker() {
     .map((d) => `<option value="${d}" ${d === current ? "selected" : ""}>${esc(title(d))}</option>`)
     .join("");
   const nameEl = $("#dishName");
-  nameEl.outerHTML = `<select class="dish__name" id="dishSelect" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:1.1rem;color:var(--ink)">${options}</select>`;
+  nameEl.outerHTML = `<select class="dish__name" id="dishSelect" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font:inherit;font-family:var(--font-display);font-size:1.25rem;color:var(--espresso);background:var(--bone)">${options}</select>`;
   const sel = $("#dishSelect");
   sel.focus();
   const commit = async () => {
@@ -471,12 +486,12 @@ async function boot() {
   if (state.view === "analyze") loadAccuracy(); // preload for method view
 }
 
-/* ── ambient dice field on the plate ─────────────────────────────────── */
+/* ── ambient steam rising off the empty plate ────────────────────────── */
 function startField() {
   const canvas = $("#plateField");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  let w, h, dots = [];
+  let w, h, wisps = [];
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
   function size() {
@@ -484,9 +499,15 @@ function startField() {
     w = r.width; h = r.height;
     canvas.width = w * dpr; canvas.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    dots = Array.from({ length: Math.round((w * h) / 9000) }, () => ({
-      x: Math.random() * w, y: Math.random() * h,
-      r: 0.6 + Math.random() * 1.1, a: 0.05 + Math.random() * 0.12,
+    const count = Math.max(4, Math.round(w / 110));
+    wisps = Array.from({ length: count }, () => ({
+      x: (0.18 + Math.random() * 0.64) * w,
+      y: Math.random() * h,
+      r: 10 + Math.random() * 22,
+      rise: 0.15 + Math.random() * 0.35,
+      drift: (Math.random() - 0.5) * 0.25,
+      a: 0.03 + Math.random() * 0.05,
+      phase: Math.random() * Math.PI * 2,
     }));
   }
 
@@ -494,12 +515,19 @@ function startField() {
   let t = 0;
   function frame() {
     ctx.clearRect(0, 0, w, h);
-    t += 0.004;
-    for (const d of dots) {
-      const a = reduce ? d.a : d.a + Math.sin(t + d.x * 0.01) * 0.05;
-      ctx.fillStyle = `rgba(14,23,38,${Math.max(0, a)})`;
+    t += 0.006;
+    for (const s of wisps) {
+      if (!reduce) {
+        s.y -= s.rise;
+        s.x += s.drift + Math.sin(t + s.phase) * 0.18;
+        if (s.y + s.r < 0) { s.y = h + s.r; s.x = (0.18 + Math.random() * 0.64) * w; }
+      }
+      const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r);
+      g.addColorStop(0, `rgba(74,107,31,${s.a})`);
+      g.addColorStop(1, "rgba(74,107,31,0)");
+      ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
       ctx.fill();
     }
     if (!reduce) requestAnimationFrame(frame);

@@ -109,7 +109,7 @@ macrolens/
 ├── web/
 │   ├── index.html           # the interface
 │   ├── styles.css           # the whole visual identity
-│   └── app.js               # routing, belief strip, range bars
+│   └── app.js               # routing, belief strip, measured gauges
 ├── src/
 │   ├── classify.py          # pretrained model → ranked predictions
 │   ├── nutrition.py         # dish → macros + honest ranges

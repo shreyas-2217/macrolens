@@ -28,7 +28,7 @@
 | `src/log.py` | Append/read meal rows in DuckDB | duckdb |
 | `src/analyze.py` | Daily totals, macro split, top dishes, summary | pandas, log |
 | `server/app.py` | FastAPI: JSON endpoints wrapping `src/`, serves `web/` | fastapi, all of the above |
-| `web/` | Hand-built interface: belief strip + range bars | the API |
+| `web/` | Hand-built interface: belief strip + measured gauges | the API |
 | `eval/evaluate.py` | Score the classifier: Food-101 test set **or** your own `eval_set/` photos | datasets, classify, nutrition |
 
 ## Data flow, concretely
@@ -36,7 +36,7 @@
 1. An image arrives at `POST /api/analyze` (or as a `PIL.Image` in Python).
 2. `classify()` returns `[{"label": "pizza", "score": 0.82}, ...]`.
 3. `nutrition.describe("pizza", portion=1.0)` returns macros **and ranges**.
-4. The interface renders the belief strip and range bars from that payload.
+4. The interface renders the belief strip and measured gauges from that payload.
 5. `POST /api/log` inserts a row; `GET /api/patterns` aggregates them.
 
 ## API surface

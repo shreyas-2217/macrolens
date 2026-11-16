@@ -72,13 +72,15 @@ a hand-built HTML/CSS/JS frontend (no UI framework)
 
 ## The interface
 
-The design is built in the visual language of a nutrition-facts panel — heavy
-rules, uppercase micro-labels, right-aligned figures — then subverted so that
-**uncertainty is the most prominent thing on screen**:
+The design ("The Kitchen Ticket") is set in the visual language of the kitchen —
+warm bone paper, espresso ink, a printed-ticket rhythm, olive as the confident
+colour and saffron for doubt — then built so that **uncertainty is the most
+prominent thing on screen**:
 
 - a **belief strip** showing the model's distribution across all its guesses;
-- every macro drawn as a **range band**, never a lone figure;
-- an ochre **"Not sure — your call"** state that asks instead of asserting.
+- every macro drawn as a **measured gauge** — a ruler track with a tolerance
+  band and a needle — never a lone figure;
+- a saffron **"Not sure — your call"** state that asks instead of asserting.
 
 ## Links
 
