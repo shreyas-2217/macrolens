@@ -168,33 +168,27 @@ code { font-family: var(--font-mono); font-size: .88em; background: var(--bone-2
 .plate__tick--br { bottom: 14px; right: 14px; border-left: 0; border-top: 0; border-bottom-right-radius: 5px; }
 
 .plate__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.plate__field { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; transition: opacity .5s ease; }
-/* steam only over the empty plate */
-.plate:has(.plate__img:not([hidden])) .plate__field { opacity: 0; }
 
 .plate__empty {
   position: absolute; inset: 0; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 7px; text-align: center;
+  align-items: center; justify-content: center; gap: 8px; text-align: center;
   width: 100%; border: 0; background: transparent; font: inherit; cursor: pointer;
   color: inherit;
 }
 .plate__empty[hidden] { display: none; }
 
-/* ceramic plate ring */
-.plate__scan {
-  width: 108px; height: 108px; margin-bottom: 14px; border-radius: 50%; position: relative;
-  border: 1px solid var(--line);
-  background:
-    radial-gradient(circle at 50% 34%, #fffefb 0 52%, var(--bone-2) 62%, #fff 100%);
-  box-shadow:
-    inset 0 0 0 7px var(--bone),
-    inset 0 0 0 8px var(--line),
-    0 12px 24px -14px rgb(60 42 20 / .5);
-}
-.plate__scan::after {
-  content: ""; position: absolute; inset: 26px; border-radius: 50%;
-  background: radial-gradient(circle at 50% 60%, var(--olive-bg), transparent 78%);
-}
+/* plate illustration — flat, food-forward, the hero of the empty state */
+.plate__art { display: block; width: 132px; height: 132px; margin-bottom: 16px; }
+.plate__art svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.pa-shadow { fill: rgb(60 42 20 / .1); }
+.pa-body { fill: #fffdf8; stroke: var(--line); stroke-width: 1.5; }
+.pa-rim { fill: none; stroke: var(--line); stroke-width: 1.5; }
+.pa-well { fill: var(--bone-2); }
+.pa-bit--1 { fill: var(--olive); opacity: .92; }
+.pa-bit--2 { fill: var(--saffron); opacity: .9; }
+.pa-bit--3 { fill: var(--paprika); opacity: .85; }
+.pa-leaf { fill: var(--olive-2); opacity: .95; }
+
 .plate__prompt { display: block; margin: 0; color: var(--espresso); font-family: var(--font-display); font-weight: 600; font-size: 1.22rem; letter-spacing: -0.01em; }
 .plate__hint { display: block; margin: 0; font-size: 12.5px; color: var(--mute); }
 .plate__hint u { text-decoration-color: var(--olive); text-underline-offset: 3px; font-weight: 600; color: var(--olive-2); }
@@ -206,6 +200,7 @@ code { font-family: var(--font-mono); font-size: .88em; background: var(--bone-2
   background: color-mix(in srgb, var(--espresso) 84%, transparent);
   color: #fdfbf4; backdrop-filter: blur(6px);
 }
+.plate__caption[hidden] { display: none; }
 .plate__cap-label { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .18em; opacity: .72; }
 .plate__cap-file { font-family: var(--font-mono); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: auto; opacity: .92; }
 

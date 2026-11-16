@@ -441,9 +441,6 @@ async function loadAccuracy() {
 
 /* ── boot ────────────────────────────────────────────────────────────── */
 async function boot() {
-  // dice field behind the plate (subtle, on-brand)
-  startField();
-
   $$(".nav__item").forEach((b) => (b.onclick = () => setView(b.dataset.nav)));
   $(".wordmark").onclick = (e) => { e.preventDefault(); setView("analyze"); };
 
@@ -484,58 +481,6 @@ async function boot() {
   pollStatus();
   setView(location.hash.replace("#", "") || "analyze");
   if (state.view === "analyze") loadAccuracy(); // preload for method view
-}
-
-/* ── ambient steam rising off the empty plate ────────────────────────── */
-function startField() {
-  const canvas = $("#plateField");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  let w, h, wisps = [];
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-  function size() {
-    const r = canvas.getBoundingClientRect();
-    w = r.width; h = r.height;
-    canvas.width = w * dpr; canvas.height = h * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const count = Math.max(4, Math.round(w / 110));
-    wisps = Array.from({ length: count }, () => ({
-      x: (0.18 + Math.random() * 0.64) * w,
-      y: Math.random() * h,
-      r: 10 + Math.random() * 22,
-      rise: 0.15 + Math.random() * 0.35,
-      drift: (Math.random() - 0.5) * 0.25,
-      a: 0.03 + Math.random() * 0.05,
-      phase: Math.random() * Math.PI * 2,
-    }));
-  }
-
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let t = 0;
-  function frame() {
-    ctx.clearRect(0, 0, w, h);
-    t += 0.006;
-    for (const s of wisps) {
-      if (!reduce) {
-        s.y -= s.rise;
-        s.x += s.drift + Math.sin(t + s.phase) * 0.18;
-        if (s.y + s.r < 0) { s.y = h + s.r; s.x = (0.18 + Math.random() * 0.64) * w; }
-      }
-      const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r);
-      g.addColorStop(0, `rgba(74,107,31,${s.a})`);
-      g.addColorStop(1, "rgba(74,107,31,0)");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    if (!reduce) requestAnimationFrame(frame);
-  }
-
-  size();
-  window.addEventListener("resize", size);
-  frame();
 }
 
 boot();
