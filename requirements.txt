@@ -8,14 +8,16 @@ pandas
 numpy
 duckdb
 
-# ---- Dataset (Food-101) ----
+# ---- Dataset / evaluation ----
 datasets
 Pillow
 
-# ---- App + evaluation ----
-streamlit
-scikit-learn
+# ---- Web (FastAPI backend + static frontend) ----
+fastapi
+uvicorn[standard]
+python-multipart
 
 # ---- Misc ----
+scikit-learn
 requests
 tqdm

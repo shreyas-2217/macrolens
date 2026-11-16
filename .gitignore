@@ -32,6 +32,7 @@ samples/_test_*.png
 
 # ---- Eval outputs / local run logs ----
 eval_run.log
+server.log
 eval_set/
 
 # ---- OS / editor ----

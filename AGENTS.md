@@ -21,7 +21,8 @@ log → analytics dashboard.
 | `src/nutrition.py` | dish → macros + uncertainty ranges |
 | `src/log.py` | DuckDB persistence (`data/logs.duckdb`) |
 | `src/analyze.py` | pandas/SQL aggregations for the dashboard |
-| `app/streamlit_app.py` | the UI |
+| `server/app.py` | FastAPI backend — JSON API + serves `web/` |
+| `web/` | Hand-built frontend (index.html, styles.css, app.js) |
 | `eval/evaluate.py` | accuracy on Food-101 test set → `eval/results.json` |
 | `eval/smoke_test.py` | fast plumbing checks, **no model needed** |
 | `scripts/seed_demo.py` | fill the log with demo meals |
@@ -30,12 +31,21 @@ log → analytics dashboard.
 ## Commands
 
 ```bash
-python eval/smoke_test.py          # fast, no model (~2s)
-python -m scripts.seed_demo        # populate dashboard demo data
+python tests/test_core.py          # fast, no model (~2s)
+python -m scripts.seed_demo        # populate Patterns demo data
 python -m src.classify IMAGE.jpg   # one-image CLI test
-python -m eval.evaluate --limit 200
-streamlit run app/streamlit_app.py
+python -m eval.evaluate --folder eval_set
+python -m uvicorn server.app:app --reload --port 8000
 ```
+
+## Frontend notes
+
+- `web/app.js` is vanilla JS, no build step. Keep it that way.
+- The **belief strip** (`.belief__*`) and **range bars** (`.rangebar`) are the
+  signature elements — they are the project's thesis made visible. Don't
+  simplify a range into a single number anywhere in the UI.
+- Confidence threshold lives in `server/app.py` (`CONFIDENCE_THRESHOLD`); the
+  nutrition uncertainty constant lives in `src/nutrition.py`.
 
 ## Conventions
 

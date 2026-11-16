@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MacroLens — honest nutrition from a photo</title>
+<meta name="description" content="Point at a meal. Get an honest macro estimate as a range, with the model's full confidence on display. Log it and watch your patterns." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body data-view="analyze">
+
+<header class="topbar">
+  <a class="wordmark" href="#" data-nav="analyze">
+    <span class="wordmark__mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" fill="currentColor"/><path d="M12 1.4v3.2M12 19.4v3.2M1.4 12h3.2M19.4 12h3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </span>
+    <span class="wordmark__text">Macro<b>Lens</b></span>
+  </a>
+
+  <nav class="nav" aria-label="Sections">
+    <button class="nav__item" data-nav="analyze" aria-current="page">Analyze</button>
+    <button class="nav__item" data-nav="patterns">Patterns</button>
+    <button class="nav__item" data-nav="method">Method</button>
+  </nav>
+
+  <div class="status" id="status" title="Model status">
+    <span class="status__dot" aria-hidden="true"></span>
+    <span class="status__text">loading</span>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ────────────────────────────── ANALYZE ────────────────────────────── -->
+  <section class="view" data-view="analyze" aria-label="Analyze a meal">
+    <div class="analyze">
+
+      <!-- Specimen plate -->
+      <div class="plate" id="plate" tabindex="0" role="button"
+           aria-label="Choose a meal photo. Drop an image here, or press Enter to browse.">
+        <span class="plate__tick plate__tick--tl" aria-hidden="true"></span>
+        <span class="plate__tick plate__tick--tr" aria-hidden="true"></span>
+        <span class="plate__tick plate__tick--bl" aria-hidden="true"></span>
+        <span class="plate__tick plate__tick--br" aria-hidden="true"></span>
+
+        <img class="plate__img" id="plateImg" alt="" hidden />
+        <canvas class="plate__field" id="plateField" aria-hidden="true"></canvas>
+
+        <div class="plate__empty" id="plateEmpty">
+          <div class="plate__scan" aria-hidden="true"></div>
+          <p class="plate__prompt">Drop a meal photo</p>
+          <p class="plate__hint">or <u>browse files</u> · JPG, PNG, WebP</p>
+        </div>
+
+        <div class="plate__caption" id="plateCaption" hidden>
+          <span class="plate__cap-label">SPECIMEN</span>
+          <span class="plate__cap-file" id="plateFile"></span>
+        </div>
+
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden />
+      </div>
+
+      <!-- Samples -->
+      <div class="samples" id="samples" hidden>
+        <span class="eyebrow">Or try a sample</span>
+        <div class="samples__row" id="samplesRow"></div>
+      </div>
+
+      <!-- Readout -->
+      <div class="readout" id="readout">
+        <div class="readout__idle" id="readoutIdle">
+          <p class="readout__lead">Point the lens at a plate. The model names the dish, then you set the portion it can never see.</p>
+          <ul class="readout__rules">
+            <li><span class="rule-num">1</span> It reads the photo.</li>
+            <li><span class="rule-num">2</span> It shows every guess, not just one.</li>
+            <li><span class="rule-num">3</span> You correct the parts a photo can't know.</li>
+          </ul>
+        </div>
+        <div class="readout__live" id="readoutLive" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────────── PATTERNS ────────────────────────────── -->
+  <section class="view" data-view="patterns" aria-label="Eating patterns" hidden>
+    <div class="section-head">
+      <span class="eyebrow">Your log</span>
+      <h1 class="display">Patterns</h1>
+      <p class="section-sub">Every meal you log becomes a row. This is where the rows turn into something you can act on.</p>
+    </div>
+    <div id="patternsBody"></div>
+  </section>
+
+  <!-- ────────────────────────────── METHOD ────────────────────────────── -->
+  <section class="view" data-view="method" aria-label="How it works" hidden>
+    <div class="section-head">
+      <span class="eyebrow">Measured, not claimed</span>
+      <h1 class="display">Method</h1>
+      <p class="section-sub">A calorie count from a photograph is a guess wearing a lab coat. Here is exactly what this does, and what it refuses to pretend.</p>
+    </div>
+
+    <div class="method">
+      <article class="method__col">
+        <span class="method__num">01</span>
+        <h2>It sees, then hedges</h2>
+        <p>A pretrained Food-101 classifier reads the photo and returns a ranked list with real confidence scores. If the top guess is below 40%, the interface asks instead of asserting.</p>
+      </article>
+      <article class="method__col">
+        <span class="method__num">02</span>
+        <h2>Ranges, never a single figure</h2>
+        <p>A photograph cannot weigh food. Every macro is shown as a band (±20%) and the portion is yours to set. A number without an error bar is a false precision.</p>
+      </article>
+      <article class="method__col">
+        <span class="method__num">03</span>
+        <h2>Corrections are counted</h2>
+        <p>When you overrule the model, it is logged. The Patterns view reports how often that happened — the app measures its own trustworthiness.</p>
+      </article>
+    </div>
+
+    <div class="accuracy" id="accuracy">
+      <span class="eyebrow">Benchmark</span>
+      <h2 class="accuracy__title">Scored on Food-101</h2>
+      <div class="accuracy__grid" id="accuracyGrid"></div>
+      <p class="accuracy__foot" id="accuracyFoot"></p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>MacroLens</span>
+  <span class="foot__sep" aria-hidden="true">·</span>
+  <span>Built by Shreyas Melligeri</span>
+  <span class="foot__sep" aria-hidden="true">·</span>
+  <span class="foot__mono">Python · PyTorch · FastAPI</span>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>

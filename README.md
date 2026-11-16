@@ -10,6 +10,8 @@ The point isn't a calorie counter. It's that the numbers are **honest** —
 shown as ranges, with a correction path, and backed by a real evaluation
 harness instead of a vibe.
 
+![Analyze view](docs/analyze.png)
+
 ---
 
 ## How it works
@@ -30,8 +32,21 @@ harness instead of a vibe.
 [4] LOG ──────► one row in DuckDB
    │
    ▼
-[5] ANALYSE ──► Streamlit dashboard: daily calories, macro split, top dishes
+[5] ANALYSE ──► Patterns view: daily calories, macro split, top dishes
 ```
+
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Vision | PyTorch + Hugging Face `transformers` (pretrained, no training) |
+| API | **FastAPI** + Uvicorn |
+| Frontend | Hand-built HTML / CSS / vanilla JS (no framework) |
+| Data | pandas + DuckDB |
+| Eval | `datasets` + a custom accuracy harness |
+
+No Streamlit. The interface is purpose-built so uncertainty is visible, not
+flattened into a default widget.
 
 ## Quickstart
 
@@ -40,34 +55,17 @@ harness instead of a vibe.
 pip install -r requirements.txt
 
 # 2. check the plumbing (no model needed, ~2s)
-python eval/smoke_test.py
+python tests/test_core.py
 
-# 3. classify your own photo from the CLI
-python -m src.classify path/to/your/meal.jpg
+# 3. run the app  →  http://127.0.0.1:8000
+python -m uvicorn server.app:app --reload --port 8000
 
-# 4. run the app
-streamlit run app/streamlit_app.py
+# 4. (optional) seed the Patterns view with demo meals
+python -m scripts.seed_demo
 ```
 
 The first classification downloads the pretrained model (~350 MB), then caches it.
-
-### See the dashboard instantly
-
-The analysis half doesn't need a single photo. Seed it with demo meals:
-
-```bash
-python -m scripts.seed_demo     # fills logs with 40 meals across 14 days
-streamlit run app/streamlit_app.py
-```
-
-Then open the **Patterns** tab for daily calories, macro split, and top dishes.
-
-### Tests
-
-```bash
-python tests/test_core.py       # 8 unit tests, no torch needed
-python eval/smoke_test.py       # end-to-end plumbing check
-```
+Drop a few `.jpg` files into `samples/` to get one-click demo photos.
 
 ## Measure it (the differentiator)
 
@@ -107,14 +105,18 @@ and latency**, then writes `eval/results.json`, which the app displays under
 
 ```
 macrolens/
-├── app/streamlit_app.py     # the UI
+├── server/app.py            # FastAPI: wraps src/, serves web/
+├── web/
+│   ├── index.html           # the interface
+│   ├── styles.css           # the whole visual identity
+│   └── app.js               # routing, belief strip, range bars
 ├── src/
 │   ├── classify.py          # pretrained model → ranked predictions
 │   ├── nutrition.py         # dish → macros + honest ranges
 │   ├── log.py               # DuckDB persistence
 │   └── analyze.py           # pandas/SQL patterns
 ├── eval/
-│   ├── evaluate.py          # accuracy harness (Food-101 test set)
+│   ├── evaluate.py          # accuracy harness (Food-101 or your own photos)
 │   └── smoke_test.py        # fast plumbing checks, no model
 ├── tests/test_core.py       # unit tests (no torch)
 ├── scripts/
@@ -131,10 +133,12 @@ macrolens/
 | Choice | Reason |
 |---|---|
 | **Ranges, not single numbers** | A photo can't measure portion size; false precision is dishonest. |
-| **"Not sure? You tell us"** | Low-confidence predictions ask instead of guessing. |
+| **The model's full belief on display** | Every guess is shown as a strip, not hidden behind one confident-sounding label. |
+| **"Not sure — your call"** | Below 40% confidence the interface turns ochre and asks instead of asserting. |
 | **Portion slider** | Hands the user the one variable the model genuinely cannot know. |
 | **Published accuracy** | The eval harness makes the honesty verifiable. |
 | **Pretrained only** | Round one ships a working product; fine-tuning is a later upgrade. |
+| **No UI framework** | Uncertainty had to be a designed element, not a default widget. |
 
 ## Known limits
 

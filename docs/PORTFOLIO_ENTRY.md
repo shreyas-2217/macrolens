@@ -21,9 +21,9 @@ deployed, so it appears in the "Selected Work" section.
     "Honest ±20% ranges + low-confidence correction path",
     "88.9% top-1 / 97.5% top-3 on the Food-101 benchmark",
   ],
-  stack: ["Python", "PyTorch", "transformers", "pandas", "DuckDB", "Streamlit"],
+  stack: ["Python", "PyTorch", "FastAPI", "pandas", "DuckDB"],
   links: [
-    { label: "Live app", href: "STREAMLIT_URL_HERE", type: "live" },
+    { label: "Live app", href: "APP_URL_HERE", type: "live" },
     { label: "Code", href: "GITHUB_URL_HERE", type: "code" },
   ],
 },
@@ -36,7 +36,7 @@ deployed, so it appears in the "Selected Work" section.
 > patterns in a Streamlit dashboard. Measured **88.9% top-1 / 97.5% top-3**
 > on the Food-101 benchmark, with a confidence-gated correction path instead
 > of fake-precise calorie counts.
-> `Python · PyTorch · pandas · DuckDB · Streamlit`
+> `Python · PyTorch · FastAPI · pandas · DuckDB`
 
 ## Interview talking points (3 sentences)
 

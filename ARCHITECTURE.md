@@ -27,16 +27,30 @@
 | `src/nutrition.py` | Map dish → approximate macros; produce honest ranges | data/nutrition_map.csv |
 | `src/log.py` | Append/read meal rows in DuckDB | duckdb |
 | `src/analyze.py` | Daily totals, macro split, top dishes, summary | pandas, log |
-| `app/streamlit_app.py` | The product surface | all of the above |
+| `server/app.py` | FastAPI: JSON endpoints wrapping `src/`, serves `web/` | fastapi, all of the above |
+| `web/` | Hand-built interface: belief strip + range bars | the API |
 | `eval/evaluate.py` | Score the classifier: Food-101 test set **or** your own `eval_set/` photos | datasets, classify, nutrition |
 
 ## Data flow, concretely
 
-1. An image arrives as a `PIL.Image`.
+1. An image arrives at `POST /api/analyze` (or as a `PIL.Image` in Python).
 2. `classify()` returns `[{"label": "pizza", "score": 0.82}, ...]`.
 3. `nutrition.describe("pizza", portion=1.0)` returns macros **and ranges**.
-4. `log.log_meal(...)` inserts a row.
-5. `analyze.*` aggregates rows for the dashboard.
+4. The interface renders the belief strip and range bars from that payload.
+5. `POST /api/log` inserts a row; `GET /api/patterns` aggregates them.
+
+## API surface
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/health` | Model readiness + refusal threshold |
+| GET | `/api/dishes` | The 101 known dishes (for the correction picker) |
+| GET | `/api/samples` | Demo photos in `samples/` |
+| GET | `/api/patterns` | Summary, daily totals, macro split, top dishes, raw log |
+| GET | `/api/accuracy` | Latest `eval/results.json` |
+| POST | `/api/analyze` | Multipart image → predictions + macros |
+| POST | `/api/estimate` | `{dish, portion}` → recomputed macros |
+| POST | `/api/log` | Persist a meal row |
 
 ## Why this split
 

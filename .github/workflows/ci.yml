@@ -14,8 +14,8 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install lightweight deps (no torch needed for these tests)
-        run: pip install duckdb pandas numpy
+        run: pip install duckdb pandas numpy pillow fastapi
       - name: Core tests
         run: python tests/test_core.py
-      - name: Smoke test
-        run: python eval/smoke_test.py
+      - name: Import the API (catches wiring errors)
+        run: python -c "import server.app"

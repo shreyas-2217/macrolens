@@ -67,9 +67,20 @@ Reproduce: `python -m scripts.fetch_eval_set --per-class 1 && python -m eval.eva
 
 ## Stack
 
-Python · PyTorch · Hugging Face `transformers` · pandas · DuckDB · Streamlit
+Python · PyTorch · Hugging Face `transformers` · **FastAPI** · pandas · DuckDB ·
+a hand-built HTML/CSS/JS frontend (no UI framework)
+
+## The interface
+
+The design is built in the visual language of a nutrition-facts panel — heavy
+rules, uppercase micro-labels, right-aligned figures — then subverted so that
+**uncertainty is the most prominent thing on screen**:
+
+- a **belief strip** showing the model's distribution across all its guesses;
+- every macro drawn as a **range band**, never a lone figure;
+- an ochre **"Not sure — your call"** state that asks instead of asserting.
 
 ## Links
 
-- Live app: *(Streamlit Cloud URL)*
+- Live app: *(URL)*
 - Code: *(GitHub URL)*
