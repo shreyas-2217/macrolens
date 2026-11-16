@@ -30,6 +30,10 @@ samples/_test_*.png
 # ---- Streamlit ----
 .streamlit/secrets.toml
 
+# ---- Eval outputs / local run logs ----
+eval_run.log
+eval_set/
+
 # ---- OS / editor ----
 .DS_Store
 Thumbs.db

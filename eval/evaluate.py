@@ -23,17 +23,73 @@ from pathlib import Path
 RESULTS = Path(__file__).resolve().parent / "results.json"
 CONFIDENCE_THRESHOLD = 0.40
 
+# Food-101 moved to the `ethz` namespace; try the canonical id first, then
+# fall back so the harness keeps working across `datasets` versions.
+DATASET_IDS = ["ethz/food101", "food101"]
 
-def run(limit: int = 1000, threshold: float = CONFIDENCE_THRESHOLD) -> dict:
+
+def _load_food101(split: str):
+    """Load Food-101 across `datasets` versions (namespace moved to ethz/)."""
     from datasets import load_dataset
 
-    from src.classify import classify, normalize_label
+    last_error = None
+    for dataset_id in DATASET_IDS:
+        try:
+            return load_dataset(dataset_id, split=split)
+        except Exception as exc:  # noqa: BLE001 - try the next id
+            last_error = exc
+            print(f"  (could not load '{dataset_id}': {type(exc).__name__})")
+    raise RuntimeError(f"Could not load Food-101 from {DATASET_IDS}") from last_error
+
+
+def _iter_hf(limit: int):
+    """Yield (PIL image, truth_label) from the Food-101 test split."""
+    from src.classify import normalize_label
+
+    ds = _load_food101(f"validation[:{limit}]")
+    names = ds.features["label"].names
+    for row in ds:
+        yield row["image"].convert("RGB"), normalize_label(names[row["label"]])
+
+
+def _iter_folder(folder: Path):
+    """Yield (image, truth) from folder/<label>/*.jpg -- your own photos.
+
+    Layout expected:
+        eval_set/pizza/IMG_1.jpg
+        eval_set/sushi/IMG_2.jpg
+    The folder name is treated as the ground-truth dish (snake_case).
+    """
+    from PIL import Image
+
+    exts = {".jpg", ".jpeg", ".png", ".webp"}
+    for label_dir in sorted(p for p in folder.iterdir() if p.is_dir()):
+        truth = label_dir.name.strip().lower().replace("-", "_").replace(" ", "_")
+        for img_path in sorted(label_dir.iterdir()):
+            if img_path.suffix.lower() in exts:
+                yield Image.open(img_path).convert("RGB"), truth
+
+
+def run(limit: int = 1000, threshold: float = CONFIDENCE_THRESHOLD, folder: str | None = None) -> dict:
+    from pathlib import Path as _Path
+
+    from src.classify import classify
     from src.nutrition import lookup
 
-    print(f"Loading Food-101 test split (limit={limit}) ...")
-    ds = load_dataset("food101", split=f"validation[:{limit}]")
+    if folder:
+        source = _Path(folder)
+        if not source.is_dir():
+            raise SystemExit(f"No such folder: {source}")
+        print(f"Evaluating on your own images in {source} ...")
+        samples = list(_iter_folder(source))
+        label = "local folder"
+    else:
+        print(f"Loading Food-101 test split (limit={limit}) ...")
+        samples = list(_iter_hf(limit))
+        label = "nateraw/food (Food-101)"
 
-    label_names = ds.features["label"].names
+    if not samples:
+        raise SystemExit("No images found to evaluate.")
 
     top1 = 0
     top3 = 0
@@ -42,10 +98,7 @@ def run(limit: int = 1000, threshold: float = CONFIDENCE_THRESHOLD) -> dict:
     latencies = []
     examples = []
 
-    for i, row in enumerate(ds):
-        image = row["image"].convert("RGB")
-        truth = normalize_label(label_names[row["label"]])
-
+    for i, (image, truth) in enumerate(samples):
         started = time.perf_counter()
         preds = classify(image, top_k=5)
         latencies.append(time.perf_counter() - started)
@@ -73,11 +126,12 @@ def run(limit: int = 1000, threshold: float = CONFIDENCE_THRESHOLD) -> dict:
             )
 
         if (i + 1) % 100 == 0:
-            print(f"  {i + 1}/{limit}  top-1 so far: {top1 / (i + 1):.1%}")
+            print(f"  {i + 1}/{len(samples)}  top-1 so far: {top1 / (i + 1):.1%}")
 
-    n = len(ds)
+    n = len(samples)
     results = {
         "model": "nateraw/food (Food-101)",
+        "source": label,
         "evaluated": n,
         "top1_accuracy": round(top1 / n, 4),
         "top3_accuracy": round(top3 / n, 4),
@@ -94,12 +148,19 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=1000)
     parser.add_argument("--threshold", type=float, default=CONFIDENCE_THRESHOLD)
+    parser.add_argument(
+        "--folder",
+        default=None,
+        help="Evaluate on your own photos: folder/<dish>/photo.jpg (skips the 5GB download).",
+    )
     args = parser.parse_args()
 
-    results = run(limit=args.limit, threshold=args.threshold)
+    results = run(limit=args.limit, threshold=args.threshold, folder=args.folder)
     RESULTS.write_text(json.dumps(results, indent=2), encoding="utf-8")
 
     print("\n=== Results ===")
+    print(f"source              : {results['source']}")
+    print(f"images evaluated    : {results['evaluated']}")
     print(f"top-1 accuracy      : {results['top1_accuracy']:.1%}")
     print(f"top-3 accuracy      : {results['top3_accuracy']:.1%}")
     print(f"nutrition coverage  : {results['nutrition_coverage']:.1%}")

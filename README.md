@@ -72,12 +72,21 @@ python eval/smoke_test.py       # end-to-end plumbing check
 ## Measure it (the differentiator)
 
 ```bash
+# On the Food-101 test set (downloads ~5GB the first time)
 python -m eval.evaluate --limit 1000
+
+# ...or on YOUR OWN photos -- no download, and more honest
+#   eval_set/pizza/IMG_1.jpg
+#   eval_set/sushi/IMG_2.jpg
+python -m eval.evaluate --folder eval_set
 ```
 
 Reports **top-1 accuracy, top-3 accuracy, nutrition coverage, refusal rate,
-and latency** on the Food-101 test set, then writes `eval/results.json`,
-which the app displays under **About**. Numbers are measured, not claimed.
+and latency**, then writes `eval/results.json`, which the app displays under
+**About**. Numbers are measured, not claimed.
+
+> Tip: benchmark accuracy (pretty studio photos) and real-world accuracy
+> (your messy kitchen photos) are different numbers. Report both.
 
 ## Project layout
 

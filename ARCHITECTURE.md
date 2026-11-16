@@ -28,7 +28,7 @@
 | `src/log.py` | Append/read meal rows in DuckDB | duckdb |
 | `src/analyze.py` | Daily totals, macro split, top dishes, summary | pandas, log |
 | `app/streamlit_app.py` | The product surface | all of the above |
-| `eval/evaluate.py` | Score the classifier on Food-101 test | datasets, classify, nutrition |
+| `eval/evaluate.py` | Score the classifier: Food-101 test set **or** your own `eval_set/` photos | datasets, classify, nutrition |
 
 ## Data flow, concretely
 
