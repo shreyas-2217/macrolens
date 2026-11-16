@@ -7,15 +7,15 @@
 
 ```
 ┌──────────────┐   ┌───────────────┐   ┌──────────────┐   ┌─────────────┐
-│  Image input │──►│  Classifier   │──►│  Nutrition   │──►│   DuckDB    │
+│  Image input │──►│  ViT classifier│──►│  Nutrition   │──►│   DuckDB    │
 │ (upload/CLI) │   │  (pretrained) │   │    map       │   │   meals     │
 └──────────────┘   └───────────────┘   └──────────────┘   └──────┬──────┘
                                                                   │
                                           ┌───────────────────────┘
                                           ▼
                                    ┌──────────────┐   ┌──────────────────┐
-                                   │   pandas /   │──►│    Streamlit     │
-                                   │     SQL      │   │    dashboard     │
+                                   │   pandas /   │──►│  FastAPI  →  web/│
+                                   │     SQL      │   │  (vanilla JS)    │
                                    └──────────────┘   └──────────────────┘
 ```
 
@@ -23,12 +23,12 @@
 
 | Module | Responsibility | Depends on |
 |---|---|---|
-| `src/classify.py` | Load a pretrained Food-101 model, return ranked (label, score) predictions | transformers, torch |
+| `src/classify.py` | Load a pretrained Food-101 ViT, return ranked (label, score) predictions | transformers, torch |
 | `src/nutrition.py` | Map dish → approximate macros; produce honest ranges | data/nutrition_map.csv |
-| `src/log.py` | Append/read meal rows in DuckDB | duckdb |
-| `src/analyze.py` | Daily totals, macro split, top dishes, summary | pandas, log |
+| `src/log.py` | Append/read meal rows in DuckDB; settings; `MACROLENS_DB` override | duckdb |
+| `src/analyze.py` | Daily totals, macro split, top dishes, insights, goal progress, weekday split | pandas, log |
 | `server/app.py` | FastAPI: JSON endpoints wrapping `src/`, serves `web/` | fastapi, all of the above |
-| `web/` | Hand-built interface: belief strip + measured gauges | the API |
+| `web/` | Hand-built interface: belief strip, measured gauges, batch, patterns, compare | the API |
 | `eval/evaluate.py` | Score the classifier: Food-101 test set **or** your own `eval_set/` photos | datasets, classify, nutrition |
 
 ## Data flow, concretely
@@ -46,11 +46,18 @@
 | GET | `/api/health` | Model readiness + refusal threshold |
 | GET | `/api/dishes` | The 101 known dishes (for the correction picker) |
 | GET | `/api/samples` | Demo photos in `samples/` |
-| GET | `/api/patterns` | Summary, daily totals, macro split, top dishes, raw log |
+| GET | `/api/patterns?days=N` | Summary, daily totals, macro split, top dishes, insights, goal progress, weekday split, raw log |
+| GET | `/api/settings` | Daily goal + theme |
+| GET | `/api/export.csv` | The whole log as CSV |
 | GET | `/api/accuracy` | Latest `eval/results.json` |
 | POST | `/api/analyze` | Multipart image → predictions + macros |
+| POST | `/api/analyze-batch` | Many images → one result per image |
 | POST | `/api/estimate` | `{dish, portion}` → recomputed macros |
+| POST | `/api/compare` | Two dishes, portion-scaled, side by side |
 | POST | `/api/log` | Persist a meal row |
+| PUT | `/api/log/{id}` | Re-set a meal's portion (macros recompute) |
+| DELETE | `/api/log/{id}` | Remove a meal |
+| PUT | `/api/settings` | Set daily goal / theme |
 
 ## Why this split
 

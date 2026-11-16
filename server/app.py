@@ -12,6 +12,7 @@ import csv
 import datetime as dt
 import io
 import json
+import os
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -40,6 +41,20 @@ _status = {"model_ready": False, "model_error": None}
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    log.init_db()
+
+    # A fresh deploy starts with an empty log, which makes the live URL look
+    # broken. Seed demo meals once so Patterns has something real to show.
+    # Set MACROLENS_DEMO=0 to disable.
+    if os.environ.get("MACROLENS_DEMO", "1") != "0":
+        try:
+            if analyze.summary()["meals"] == 0:
+                from scripts.seed_demo import seed
+
+                seed(40, reset=False)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[startup] demo seed skipped: {type(exc).__name__}: {exc}")
+
     # Warm the model once so the first analysis is quick.
     try:
         from src.classify import load_classifier

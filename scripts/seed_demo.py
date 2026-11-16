@@ -37,8 +37,14 @@ MENU = [
 ]
 
 
-def main(count: int = 40) -> None:
-    log.reset()
+def seed(count: int = 40, reset: bool = True) -> int:
+    """Write `count` plausible meals across the last two weeks.
+
+    `reset=False` is what the server uses on a fresh deploy: it tops up an empty
+    log so the live URL shows a working dashboard instead of an empty state.
+    """
+    if reset:
+        log.reset()
     now = datetime.now(timezone.utc)
 
     for _ in range(count):
@@ -57,6 +63,11 @@ def main(count: int = 40) -> None:
             corrected=random.random() < 0.1,
             logged_at=logged_at,
         )
+    return count
+
+
+def main(count: int = 40) -> None:
+    seed(count, reset=True)
 
     from src import analyze
 

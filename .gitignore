@@ -18,8 +18,12 @@ models/
 *.onnx
 *.safetensors
 
-# ---- Eval output (regenerate via eval/evaluate.py) ----
-eval/results.json
+# ---- Eval output ----
+# NOTE: eval/results.json IS tracked on purpose. The Method view reads it to
+# show the benchmark, so a fresh clone must have it. Only raw run logs and the
+# downloaded eval image set stay ignored.
+eval_run.log
+eval_set/
 
 # ---- Local logs ----
 *.log
@@ -29,11 +33,6 @@ samples/_test_*.png
 
 # ---- Streamlit ----
 .streamlit/secrets.toml
-
-# ---- Eval outputs / local run logs ----
-eval_run.log
-server.log
-eval_set/
 
 # ---- OS / editor ----
 .DS_Store

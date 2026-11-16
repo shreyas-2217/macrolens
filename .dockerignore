@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.git/
+.gitignore
+data/logs.duckdb
+data/logs.duckdb.wal
+eval_set/
+samples/_test_*.png
+*.log
+.hf-cache/
+.pytest_cache/

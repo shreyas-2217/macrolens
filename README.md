@@ -147,6 +147,51 @@ macrolens/
 └── notebooks/               # scratchpad
 ```
 
+## Deploy
+
+The app is one process (FastAPI + static frontend), so any Docker host works.
+
+**Hugging Face Spaces (recommended, free)** — its CPU tier gives 16 GB RAM,
+which PyTorch needs. Render's free tier (512 MB) cannot load the model.
+
+1. Create a new Space → **Docker** SDK → blank template.
+2. Push this repo to the Space's git remote (or upload the files).
+3. Add this YAML front matter to the top of `README.md` *in the Space*, so the
+   Space knows which port to serve:
+
+   ```yaml
+   ---
+   title: MacroLens
+   sdk: docker
+   app_port: 7860
+   ---
+   ```
+
+The `Dockerfile` already pins CPU-only torch, bakes in the Food-101 weights,
+opens permissions for the uid-1000 user Spaces run as, and listens on `$PORT`.
+
+**Any VPS / Railway / Fly.io** — same image:
+
+```bash
+docker build -t macrolens .
+docker run -p 7860:7860 macrolens
+```
+
+**Render / Railway without Docker** — `Procfile` and `server/run.py` are
+included, but choose an instance with **≥2 GB RAM** or the model load fails.
+
+**Environment variables**
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `PORT` | `7860` | Port to bind |
+| `MACROLENS_DB` | `data/logs.duckdb` | Point the log somewhere else (tests use this) |
+| `MACROLENS_DEMO` | `1` | Seed 40 demo meals when the log is empty, so a fresh deploy isn't a blank dashboard. Set to `0` for a clean instance. |
+
+> A container's filesystem is ephemeral: on hosts that rebuild or restart,
+> the DuckDB log resets (and is re-seeded from `MACROLENS_DEMO`). That is fine
+> for a demo. For persistence, mount a volume at `/app/data`.
+
 ## Design choices (and why)
 
 | Choice | Reason |
@@ -170,5 +215,6 @@ macrolens/
 
 - [ ] Multi-food detection (bounding boxes per item)
 - [ ] Open Food Facts API for a wider dish/brand catalogue
-- [ ] Weekly email/CSV export of the log
+- [ ] Weight/volume estimation from plate geometry (the real fix for portion size)
+- [x] Weekly CSV export of the log
 - [ ] A public accuracy page that updates on every eval run
