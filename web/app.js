@@ -434,8 +434,9 @@ async function boot() {
 
   const plate = $("#plate");
   const input = $("#fileInput");
-  plate.onclick = () => input.click();
-  plate.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } };
+  const trigger = () => input.click();
+  plate.onclick = (e) => { if (e.target.closest("button, a, input, select")) return; trigger(); };
+  $("#plateEmpty").onclick = trigger;
   input.onchange = () => { if (input.files[0]) showFile(input.files[0]); };
 
   ["dragenter", "dragover"].forEach((ev) =>

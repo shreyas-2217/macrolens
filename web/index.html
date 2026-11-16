@@ -39,8 +39,7 @@
     <div class="analyze">
 
       <!-- Specimen plate -->
-      <div class="plate" id="plate" tabindex="0" role="button"
-           aria-label="Choose a meal photo. Drop an image here, or press Enter to browse.">
+      <div class="plate" id="plate">
         <span class="plate__tick plate__tick--tl" aria-hidden="true"></span>
         <span class="plate__tick plate__tick--tr" aria-hidden="true"></span>
         <span class="plate__tick plate__tick--bl" aria-hidden="true"></span>
@@ -49,13 +48,13 @@
         <img class="plate__img" id="plateImg" alt="" hidden />
         <canvas class="plate__field" id="plateField" aria-hidden="true"></canvas>
 
-        <div class="plate__empty" id="plateEmpty">
-          <div class="plate__scan" aria-hidden="true"></div>
-          <p class="plate__prompt">Drop a meal photo</p>
-          <p class="plate__hint">or <u>browse files</u> · JPG, PNG, WebP</p>
-        </div>
+        <button class="plate__empty" id="plateEmpty" type="button">
+          <span class="plate__scan" aria-hidden="true"></span>
+          <span class="plate__prompt">Drop a meal photo</span>
+          <span class="plate__hint">or <u>browse files</u> · JPG, PNG, WebP</span>
+        </button>
 
-        <div class="plate__caption" id="plateCaption" hidden>
+        <div class="plate__caption" id="plateCaption" hidden aria-hidden="true">
           <span class="plate__cap-label">SPECIMEN</span>
           <span class="plate__cap-file" id="plateFile"></span>
         </div>
