@@ -89,6 +89,17 @@ Reports **top-1 accuracy, top-3 accuracy, nutrition coverage, refusal rate,
 and latency**, then writes `eval/results.json`, which the app displays under
 **About**. Numbers are measured, not claimed.
 
+### Current result
+
+| Metric | Value |
+|---|---|
+| Top-1 accuracy | **88.9%** |
+| Top-3 accuracy | **97.5%** |
+| Nutrition coverage | **100%** |
+| Latency | **510 ms/image** (CPU) |
+
+*(81 Food-101 validation images, one per dish.)*
+
 > Tip: benchmark accuracy (pretty studio photos) and real-world accuracy
 > (your messy kitchen photos) are different numbers. Report both.
 

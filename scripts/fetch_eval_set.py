@@ -51,8 +51,9 @@ def _download(url: str, dest: Path, retries: int = 4) -> bool:
 
 
 def fetch(per_class: int = 1, total: int = 200) -> int:
-    # The validation split stores 250 images per class, grouped. So class `c`
-    # starts at row c*250 -- fetch a slice per class to get variety.
+    # The validation split is stored grouped by class. To get variety we sample
+    # spread-out offsets, and we trust each row's OWN `label` field -- never
+    # assume offset 0 == class 0.
     first = _get(
         f"{API.replace('/rows', '/first-rows')}?dataset=ethz%2Ffood101&config=default&split=validation"
     )
@@ -62,40 +63,51 @@ def fetch(per_class: int = 1, total: int = 200) -> int:
             names = f.get("type", {}).get("names", [])
 
     n_classes = len(names) or 101
+    target = max(total, per_class * n_classes)
+    approx_rows = n_classes * 250
+    step = max(1, approx_rows // target)
+
     per_dish: dict[str, int] = {}
     saved = 0
+    offset = 0
 
-    for class_idx in range(n_classes):
-        label = names[class_idx].strip().lower().replace("-", "_").replace(" ", "_")
-        offset = class_idx * 250
+    while saved < target and offset < approx_rows:
         url = (
             f"{API}?dataset=ethz%2Ffood101&config=default&split=validation"
-            f"&offset={offset}&length={per_class}"
+            f"&offset={offset}&length=1"
         )
         try:
             data = _get(url)
         except Exception as exc:  # noqa: BLE001
-            print(f"  skip {label}: {type(exc).__name__}")
+            print(f"  skip offset {offset}: {type(exc).__name__}")
+            offset += step
             continue
 
-        for row in data.get("rows", []):
-            img_meta = row["row"].get("image") or {}
-            src = img_meta.get("src")
-            if not src:
-                continue
+        rows = data.get("rows", [])
+        if not rows:
+            break
 
-            out_dir = EVAL_SET / label
-            out_dir.mkdir(parents=True, exist_ok=True)
-            out_path = out_dir / f"{label}_{per_dish.get(label, 0)}.jpg"
+        r = rows[0]["row"]
+        label_idx = r.get("label")
+        label = (
+            names[label_idx] if isinstance(label_idx, int) and names else str(label_idx)
+        )
+        label = label.strip().lower().replace("-", "_").replace(" ", "_")
 
-            if _download(src, out_path):
-                per_dish[label] = per_dish.get(label, 0) + 1
-                saved += 1
+        if per_dish.get(label, 0) < per_class:
+            src = (r.get("image") or {}).get("src")
+            if src:
+                out_dir = EVAL_SET / label
+                out_dir.mkdir(parents=True, exist_ok=True)
+                out_path = out_dir / f"{label}_{per_dish.get(label, 0)}.jpg"
+                if _download(src, out_path):
+                    per_dish[label] = per_dish.get(label, 0) + 1
+                    saved += 1
 
-        time.sleep(0.3)
-
-        if class_idx % 20 == 0:
-            print(f"  ...{class_idx}/{n_classes} classes, {saved} images")
+        offset += step
+        if saved and saved % 25 == 0:
+            print(f"  ...{saved} images across {len(per_dish)} dishes")
+        time.sleep(0.25)
 
     return saved
 

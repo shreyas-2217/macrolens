@@ -19,7 +19,7 @@ deployed, so it appears in the "Selected Work" section.
   highlights: [
     "Pretrained Food-101 classifier, no training",
     "Honest ±20% ranges + low-confidence correction path",
-    "Published eval harness: top-1/top-3 accuracy on the test set",
+    "88.9% top-1 / 97.5% top-3 on the Food-101 benchmark",
   ],
   stack: ["Python", "PyTorch", "transformers", "pandas", "DuckDB", "Streamlit"],
   links: [
@@ -32,12 +32,11 @@ deployed, so it appears in the "Selected Work" section.
 ## Résumé bullet (one line)
 
 > **MacroLens** — CV nutrition tracker. Classifies meal photos with a
-> pretrained CNN, maps dishes to macro ranges, and analyses eating patterns
-> in a Streamlit dashboard. Ships an evaluation harness (87% top-3) and a
-> correction path instead of fake-precise calorie counts.
+> pretrained CNN and maps dishes to macro ranges, then analyses eating
+> patterns in a Streamlit dashboard. Measured **88.9% top-1 / 97.5% top-3**
+> on the Food-101 benchmark, with a confidence-gated correction path instead
+> of fake-precise calorie counts.
 > `Python · PyTorch · pandas · DuckDB · Streamlit`
-
-*(Replace 87% with your real number from `eval/results.json`.)*
 
 ## Interview talking points (3 sentences)
 

@@ -53,15 +53,17 @@ what this is"* and moves on.
 
 ## Numbers
 
-*(Fill in after running `python -m eval.evaluate`.)*
+*(Real run: 81 Food-101 validation images, one per dish, fetched via the HF API.)*
 
 | Metric | Value |
 |---|---|
-| Top-1 accuracy | — |
-| Top-3 accuracy | — |
-| Nutrition coverage | — |
-| Refusal rate | — |
-| Latency | — |
+| Top-1 accuracy | **88.9%** |
+| Top-3 accuracy | **97.5%** |
+| Nutrition coverage | **100%** |
+| Refusal rate | 0.0% |
+| Latency | **510 ms/image** (CPU) |
+
+Reproduce: `python -m scripts.fetch_eval_set --per-class 1 && python -m eval.evaluate --folder eval_set`
 
 ## Stack
 
