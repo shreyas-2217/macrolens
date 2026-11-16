@@ -10,9 +10,28 @@ The point isn't a calorie counter. It's that the numbers are **honest** —
 shown as ranges, with a correction path, and backed by a real evaluation
 harness instead of a vibe.
 
-![Analyze view](docs/analyze.png)
-
 ---
+
+## Features
+
+**Analyze**
+- Single photo → dish, confidence, macros as ranges
+- **Batch mode** — drop a folder; every image is scored in one pass, and
+  low-confidence guesses are flagged for review
+- **Belief strip** — the model's whole distribution, not just its top pick
+- **Measured gauges** — each macro as a ruler band with a needle
+- **Portion slider** — the one thing a photo can't know, handed to you
+
+**Patterns**
+- **Insights** — computed findings ("Weekends run 59% higher") from your rows
+- **Daily goal** — a ring showing days on target, with an honest ±20% band
+- **Weekday split** — weekends highlighted against weekdays
+- **Editable log** — change a portion (macros recompute) or remove a row
+- **Range picker** (7 / 14 / 30 days) and **CSV export**
+
+**Compare** — two dishes head-to-head on the same honest scale
+
+**Everywhere** — dark mode (persisted), keyboard shortcuts (`1`–`4`, `/`, `D`, `?`)
 
 ## How it works
 
@@ -32,7 +51,7 @@ harness instead of a vibe.
 [4] LOG ──────► one row in DuckDB
    │
    ▼
-[5] ANALYSE ──► Patterns view: daily calories, macro split, top dishes
+[5] ANALYSE ──► Patterns: insights, goal ring, weekday split, top dishes
 ```
 
 ## Stack

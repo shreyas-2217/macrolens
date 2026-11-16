@@ -6,11 +6,18 @@ These never import torch, so they run anywhere in a second.
 
 from __future__ import annotations
 
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+
+# Point the log at a throwaway file *before* importing it, so tests never
+# touch the real data/logs.duckdb.
+_TEST_DB = Path(tempfile.gettempdir()) / "macrolens_test_logs.duckdb"
+os.environ["MACROLENS_DB"] = str(_TEST_DB)
 
 from src import analyze, log  # noqa: E402
 from src.nutrition import (  # noqa: E402
@@ -61,6 +68,76 @@ def test_log_round_trip():
     assert df.iloc[0]["dish"] == "pizza"
     log.reset()
     assert analyze.summary()["meals"] == 0
+
+
+def test_update_and_delete_meal():
+    log.reset()
+    log.log_meal("pizza", "Pizza", 0.9, 1.0, lookup("pizza"))
+    meal = log.get_meal(1)
+    assert meal["dish"] == "pizza"
+    log.update_meal(1, 2.0, lookup("pizza", 2.0))
+    assert log.get_meal(1)["portion"] == 2.0
+    assert log.get_meal(1)["kcal"] == lookup("pizza", 2.0)["kcal"]
+    log.delete_meal(1)
+    assert log.get_meal(1) is None
+    assert analyze.summary()["meals"] == 0
+
+
+def test_settings_round_trip():
+    log.set_setting("daily_goal", 2100)
+    assert log.get_setting("daily_goal") == "2100"
+    assert log.get_setting("missing", "fallback") == "fallback"
+
+
+def test_goal_progress_bands():
+    log.reset()
+    from datetime import datetime, timezone
+
+    from src.nutrition import lookup
+
+    # three meals today summing well past the goal
+    for dish in ("pizza", "sushi", "ramen"):
+        log.log_meal(dish, dish.title(), 0.9, 1.0, lookup(dish),
+                     logged_at=datetime.now(timezone.utc))
+    prog = analyze.goal_progress(2000)
+    assert prog["days_logged"] == 1
+    assert prog["band_low"] == 1600 and prog["band_high"] == 2400
+    assert len(prog["per_day"]) == 1
+    log.reset()
+
+
+def test_insights_need_enough_rows():
+    log.reset()
+    from src.nutrition import lookup
+
+    log.log_meal("pizza", "Pizza", 0.9, 1.0, lookup("pizza"))
+    assert analyze.insights() == []      # too few rows -> no findings
+    log.reset()
+
+
+def test_weekday_split_shape():
+    log.reset()
+    from src.nutrition import lookup
+
+    for _ in range(6):
+        log.log_meal("pizza", "Pizza", 0.9, 1.0, lookup("pizza"))
+    wd = analyze.weekday_split()
+    assert len(wd) == 7
+    assert [d["dow"] for d in wd] == ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    log.reset()
+
+
+def test_export_rows_is_serialisable():
+    log.reset()
+    from src.nutrition import lookup
+
+    log.log_meal("pizza", "Pizza", 0.9, 1.0, lookup("pizza"))
+    import json
+
+    rows = analyze.export_rows()
+    assert len(rows) == 1
+    json.dumps(rows)  # must not raise (dates coerced to strings)
+    log.reset()
 
 
 def test_summary_empty_is_safe():

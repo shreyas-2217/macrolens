@@ -9,9 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/styles.css?v=3" />
+<link rel="stylesheet" href="/styles.css?v=10" />
 </head>
-<body data-view="analyze">
+<body data-view="analyze" data-theme="light">
 
 <header class="topbar">
   <a class="wordmark" href="#" data-nav="analyze">
@@ -24,8 +24,14 @@
   <nav class="nav" aria-label="Sections">
     <button class="nav__item" data-nav="analyze" aria-current="page">Analyze</button>
     <button class="nav__item" data-nav="patterns">Patterns</button>
+    <button class="nav__item" data-nav="compare">Compare</button>
     <button class="nav__item" data-nav="method">Method</button>
   </nav>
+
+  <button class="icon-btn" id="themeBtn" title="Toggle dark mode (D)" aria-label="Toggle dark mode">
+    <svg class="icon-btn__sun" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path d="M12 2.6v2.4M12 19v2.4M2.6 12H5M19 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <svg class="icon-btn__moon" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z" fill="currentColor"/></svg>
+  </button>
 
   <div class="status" id="status" title="Model status">
     <span class="status__dot" aria-hidden="true"></span>
@@ -39,7 +45,7 @@
   <section class="view" data-view="analyze" aria-label="Analyze a meal">
     <div class="analyze">
 
-      <!-- Specimen plate -->
+      <!-- Single plate -->
       <div class="plate" id="plate">
         <span class="plate__tick plate__tick--tl" aria-hidden="true"></span>
         <span class="plate__tick plate__tick--tr" aria-hidden="true"></span>
@@ -61,8 +67,8 @@
               <circle class="pa-bit pa-bit--3" cx="84" cy="72" r="5.5"/>
             </svg>
           </span>
-          <span class="plate__prompt">Drop a meal photo</span>
-          <span class="plate__hint">or <u>browse files</u> · JPG, PNG, WebP</span>
+          <span class="plate__prompt" id="platePrompt">Drop a meal photo</span>
+          <span class="plate__hint" id="plateHint">or <u>browse files</u> · JPG, PNG, WebP</span>
         </button>
 
         <div class="plate__caption" id="plateCaption" hidden aria-hidden="true">
@@ -73,10 +79,16 @@
         <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden />
       </div>
 
-      <!-- Samples -->
-      <div class="samples" id="samples" hidden>
-        <span class="eyebrow">Or try a sample</span>
-        <div class="samples__row" id="samplesRow"></div>
+      <div class="under-plate">
+        <div class="modeswitch" role="group" aria-label="Analyze mode">
+          <button class="modeswitch__btn is-on" data-mode="single" aria-pressed="true">Single</button>
+          <button class="modeswitch__btn" data-mode="batch" aria-pressed="false">Batch</button>
+        </div>
+
+        <div class="samples" id="samples" hidden>
+          <span class="eyebrow">Or try a sample</span>
+          <div class="samples__row" id="samplesRow"></div>
+        </div>
       </div>
 
       <!-- Readout -->
@@ -102,6 +114,16 @@
       <p class="section-sub">Every meal you log becomes a row. This is where the rows turn into something you can act on.</p>
     </div>
     <div id="patternsBody"></div>
+  </section>
+
+  <!-- ────────────────────────────── COMPARE ────────────────────────────── -->
+  <section class="view" data-view="compare" aria-label="Compare dishes" hidden>
+    <div class="section-head">
+      <span class="eyebrow">Head to head</span>
+      <h1 class="display">Compare</h1>
+      <p class="section-sub">Two dishes, side by side, on the same honest scale. Useful before you order, not after.</p>
+    </div>
+    <div class="compare" id="compareBody"></div>
   </section>
 
   <!-- ────────────────────────────── METHOD ────────────────────────────── -->
@@ -149,6 +171,25 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="/app.js?v=3"></script>
+<!-- keyboard help -->
+<div class="sheet" id="helpSheet" hidden>
+  <div class="sheet__scrim" data-close="help"></div>
+  <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <h2 class="sheet__title" id="helpTitle">Keyboard shortcuts</h2>
+    <dl class="keys">
+      <div><dt><kbd>1</kbd></dt><dd>Analyze</dd></div>
+      <div><dt><kbd>2</kbd></dt><dd>Patterns</dd></div>
+      <div><dt><kbd>3</kbd></dt><dd>Compare</dd></div>
+      <div><dt><kbd>4</kbd></dt><dd>Method</dd></div>
+      <div><dt><kbd>/</kbd></dt><dd>Focus the plate / upload</dd></div>
+      <div><dt><kbd>D</kbd></dt><dd>Toggle dark mode</dd></div>
+      <div><dt><kbd>?</kbd></dt><dd>This panel</dd></div>
+      <div><dt><kbd>Esc</kbd></dt><dd>Close</dd></div>
+    </dl>
+    <button class="btn btn--ghost" data-close="help">Close</button>
+  </div>
+</div>
+
+<script src="/app.js?v=10"></script>
 </body>
 </html>

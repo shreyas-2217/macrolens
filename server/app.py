@@ -8,6 +8,7 @@ the hand-built frontend in ``web/``. One process, one deploy -- no Streamlit.
 
 from __future__ import annotations
 
+import csv
 import datetime as dt
 import io
 import json
@@ -65,6 +66,22 @@ class LogIn(BaseModel):
     confidence: float
     portion: float = 1.0
     corrected: bool = False
+
+
+class UpdateMealIn(BaseModel):
+    portion: float
+
+
+class SettingsIn(BaseModel):
+    daily_goal: float | None = None
+    theme: str | None = None
+
+
+class CompareIn(BaseModel):
+    dish_a: str
+    dish_b: str
+    portion_a: float = 1.0
+    portion_b: float = 1.0
 
 
 # -------------------------------------------------------------------- serialisation
@@ -127,13 +144,65 @@ def samples():
 
 
 @app.get("/api/patterns")
-def patterns():
+def patterns(days: int = 14):
+    goal_raw = log.get_setting("daily_goal")
+    goal = float(goal_raw) if goal_raw else None
     return {
         "summary": analyze.summary(),
-        "daily": _records(analyze.daily_totals(14)),
+        "daily": _records(analyze.daily_totals(days)),
         "macroSplit": analyze.macro_split(),
         "topDishes": _records(analyze.top_dishes(6)),
         "meals": _records(analyze.load_meals()),
+        "weekday": analyze.weekday_split(),
+        "insights": analyze.insights(goal),
+        "goal": goal,
+        "goalProgress": analyze.goal_progress(goal) if goal else None,
+    }
+
+
+@app.get("/api/settings")
+def get_settings():
+    goal_raw = log.get_setting("daily_goal")
+    return {
+        "daily_goal": float(goal_raw) if goal_raw else None,
+        "theme": log.get_setting("theme", "light"),
+    }
+
+
+@app.put("/api/settings")
+def put_settings(body: SettingsIn):
+    if body.daily_goal is not None:
+        log.set_setting("daily_goal", body.daily_goal)
+    if body.theme:
+        log.set_setting("theme", body.theme)
+    return get_settings()
+
+
+@app.get("/api/export.csv")
+def export_csv():
+    fields = ["id", "logged_at", "dish", "display", "confidence",
+              "portion", "kcal", "protein_g", "carbs_g", "fat_g", "corrected"]
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    for row in analyze.export_rows():
+        writer.writerow(row)
+    from fastapi.responses import Response
+
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=macrolens-log.csv"},
+    )
+
+
+@app.post("/api/compare")
+def compare(body: CompareIn):
+    a = describe(body.dish_a, body.portion_a)
+    b = describe(body.dish_b, body.portion_b)
+    return {
+        "a": {"dish": body.dish_a, "macros": _macros(a)},
+        "b": {"dish": body.dish_b, "macros": _macros(b)},
     }
 
 
@@ -171,6 +240,37 @@ async def analyze_photo(file: UploadFile = File(...)):
     }
 
 
+@app.post("/api/analyze-batch")
+async def analyze_batch(files: list[UploadFile] = File(...)):
+    """Classify many photos in one request. Returns one result per image.
+
+    Batch is where the honesty thesis compounds: mixed confidence across a
+    folder is visible at once, and the low-confidence ones are flagged.
+    """
+    from src.classify import classify
+
+    out = []
+    for f in files:
+        raw = await f.read()
+        try:
+            image = Image.open(io.BytesIO(raw)).convert("RGB")
+        except Exception:  # noqa: BLE001
+            out.append({"file": f.filename, "ok": False, "error": "unreadable"})
+            continue
+        preds = classify(image, top_k=5)
+        best = preds[0]
+        info = describe(best["label"], 1.0)
+        out.append({
+            "file": f.filename,
+            "ok": True,
+            "predictions": preds,
+            "best": best,
+            "confident": best["score"] >= CONFIDENCE_THRESHOLD,
+            "macros": _macros(info),
+        })
+    return {"results": out, "threshold": CONFIDENCE_THRESHOLD}
+
+
 @app.post("/api/estimate")
 def estimate(body: EstimateIn):
     info = describe(body.dish, body.portion)
@@ -189,6 +289,30 @@ def log_meal(body: LogIn):
         corrected=body.corrected,
     )
     return {"ok": True, "id": meal_id}
+
+
+@app.put("/api/log/{meal_id}")
+def update_log(meal_id: int, body: UpdateMealIn):
+    meal = log.get_meal(meal_id)
+    if meal is None:
+        raise HTTPException(status_code=404, detail="No such meal.")
+    info = describe(meal["dish"], body.portion)
+    log.update_meal(meal_id, body.portion, info)
+    return {"ok": True, "macros": _macros(info)}
+
+
+@app.delete("/api/log/{meal_id}")
+def delete_log(meal_id: int):
+    if log.get_meal(meal_id) is None:
+        raise HTTPException(status_code=404, detail="No such meal.")
+    log.delete_meal(meal_id)
+    return {"ok": True}
+
+
+@app.post("/api/log/reset")
+def reset_log():
+    log.reset()
+    return {"ok": True}
 
 
 # --------------------------------------------------------------------------- static
