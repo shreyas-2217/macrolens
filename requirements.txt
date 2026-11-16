@@ -1,0 +1,21 @@
+# ---- Core CV (computer vision) ----
+torch
+torchvision
+transformers
+
+# ---- Nutrition / data ----
+pandas
+numpy
+duckdb
+
+# ---- Dataset (Food-101) ----
+datasets
+Pillow
+
+# ---- App + evaluation ----
+streamlit
+scikit-learn
+
+# ---- Misc ----
+requests
+tqdm
