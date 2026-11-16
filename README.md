@@ -72,10 +72,14 @@ python eval/smoke_test.py       # end-to-end plumbing check
 ## Measure it (the differentiator)
 
 ```bash
-# On the Food-101 test set (downloads ~5GB the first time)
+# Fastest: pull a small real benchmark set via the HF API (no 5GB download)
+python -m scripts.fetch_eval_set --per-class 1
+python -m eval.evaluate --folder eval_set
+
+# Or the full Food-101 test set (downloads ~5GB the first time)
 python -m eval.evaluate --limit 1000
 
-# ...or on YOUR OWN photos -- no download, and more honest
+# ...or on YOUR OWN photos -- most honest of all
 #   eval_set/pizza/IMG_1.jpg
 #   eval_set/sushi/IMG_2.jpg
 python -m eval.evaluate --folder eval_set
@@ -104,6 +108,7 @@ macrolens/
 ├── tests/test_core.py       # unit tests (no torch)
 ├── scripts/
 │   ├── seed_demo.py         # fill the log with demo meals
+│   ├── fetch_eval_set.py    # pull a small real benchmark set (no 5GB download)
 │   └── verify_classify.py   # end-to-end single-image check
 ├── data/nutrition_map.csv   # 101 dishes → per-serving macros
 ├── samples/                 # drop a few meal photos here
