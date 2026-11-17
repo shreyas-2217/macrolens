@@ -1,3 +1,15 @@
+---
+title: MacroLens
+emoji: 🍽️
+colorFrom: yellow
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+short_description: Honest nutrition from a meal photo
+---
+
 # MacroLens
 
 **Point your camera at a meal. Get an honest estimate. Log it. See your patterns.**
