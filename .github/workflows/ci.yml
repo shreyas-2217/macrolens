@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install lightweight deps (no torch needed for these tests)
-        run: pip install duckdb pandas numpy pillow fastapi
+        run: pip install duckdb pandas numpy pillow fastapi python-multipart
       - name: Core tests
         run: python tests/test_core.py
       - name: Import the API (catches wiring errors)
