@@ -1,7 +1,14 @@
-# MacroLens — container image for Docker hosts (Hugging Face Spaces, Render,
-# Railway, Fly.io, a VPS). Hugging Face Spaces is the recommended free target:
-# its CPU tier gives 16 GB RAM, which PyTorch needs, and it does not sleep
-# mid-demo the way Render's 512 MB free tier would.
+# MacroLens — container image for Docker hosts (Vercel Container runtime,
+# Railway, Fly.io, Render, a VPS).
+#
+# The live demo runs on Vercel's Container runtime, which builds this file and
+# serves it as an autoscaling Function. Two host-specific notes:
+#   * Vercel routes traffic to port 80 by default; set PORT=80 in the project's
+#     environment variables (it overrides the 7860 default below).
+#   * Vercel has no persistent disk, so set MACROLENS_DB=/tmp/logs.duckdb there.
+#     /tmp is per-instance and wiped on cold start, so the DuckDB log resets.
+# For a log that survives restarts, run this image somewhere with a volume
+# mounted at /app/data.
 #
 # CPU-only torch matters: the default PyPI wheel drags in ~2.5 GB of CUDA
 # libraries this app never uses.

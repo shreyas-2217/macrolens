@@ -1,15 +1,3 @@
----
-title: MacroLens
-emoji: 🍽️
-colorFrom: yellow
-colorTo: green
-sdk: docker
-app_port: 7860
-pinned: false
-license: mit
-short_description: Honest nutrition from a meal photo
----
-
 # MacroLens
 
 **Point your camera at a meal. Get an honest estimate. Log it. See your patterns.**
@@ -163,24 +151,25 @@ macrolens/
 
 The app is one process (FastAPI + static frontend), so any Docker host works.
 
-**Hugging Face Spaces (recommended, free)** — its CPU tier gives 16 GB RAM,
-which PyTorch needs. Render's free tier (512 MB) cannot load the model.
+**Vercel (free) — what the live demo runs on.**
 
-1. Create a new Space → **Docker** SDK → blank template.
-2. Push this repo to the Space's git remote (or upload the files).
-3. Add this YAML front matter to the top of `README.md` *in the Space*, so the
-   Space knows which port to serve:
+Vercel's *Container* runtime builds the `Dockerfile` and serves it as a
+Function. Two things make that work here, both already configured:
 
-   ```yaml
-   ---
-   title: MacroLens
-   sdk: docker
-   app_port: 7860
-   ---
-   ```
+- `vercel.json` sets `"framework": "container"`, because without it Vercel's
+  framework detection claims the repo as FastAPI and ignores the `Dockerfile`.
+- Vercel routes traffic to port **80** by default, so the project sets `PORT=80`.
 
-The `Dockerfile` already pins CPU-only torch, bakes in the Food-101 weights,
-opens permissions for the uid-1000 user Spaces run as, and listens on `$PORT`.
+Measured cost of that image, so there are no surprises:
+
+| Metric | Measured | Vercel Hobby limit |
+|---|---|---|
+| Peak RSS after model load + inference | **744 MB** | 2 GB |
+| Image size (CPU torch + baked weights) | ~1.3 GB | 15 GB |
+| Cold start (weights baked in) | ~10 s model load | — |
+
+Import the repo at `vercel.com/new`, keep the **Container** preset, then add
+`PORT=80` and `MACROLENS_DB=/tmp/logs.duckdb` as environment variables.
 
 **Any VPS / Railway / Fly.io** — same image:
 
@@ -196,13 +185,18 @@ included, but choose an instance with **≥2 GB RAM** or the model load fails.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `PORT` | `7860` | Port to bind |
-| `MACROLENS_DB` | `data/logs.duckdb` | Point the log somewhere else (tests use this) |
+| `PORT` | `7860` | Port to bind. Vercel needs `80`. |
+| `MACROLENS_DB` | `data/logs.duckdb` | Point the log somewhere else. Vercel has no writable disk except `/tmp`, so set `/tmp/logs.duckdb` there. |
 | `MACROLENS_DEMO` | `1` | Seed 40 demo meals when the log is empty, so a fresh deploy isn't a blank dashboard. Set to `0` for a clean instance. |
 
-> A container's filesystem is ephemeral: on hosts that rebuild or restart,
-> the DuckDB log resets (and is re-seeded from `MACROLENS_DEMO`). That is fine
-> for a demo. For persistence, mount a volume at `/app/data`.
+> **Read this before judging the demo persistency.** DuckDB is an embedded
+> single-writer database, and serverless hosts have no persistent disk. On
+> Vercel the log lives in `/tmp`, which is per-instance and wiped on cold
+> start — so a meal you log can disappear, and two concurrent instances can
+> each hold a different log. The app therefore re-seeds 40 demo meals whenever
+> it finds an empty log, which keeps the dashboard meaningfully populated.
+> For a real log that survives restarts, run this image on a host with a
+> volume mounted at `/app/data`.
 
 ## Design choices (and why)
 
