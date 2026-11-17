@@ -171,12 +171,17 @@ Measured cost of that image, so there are no surprises:
 Import the repo at `vercel.com/new`, keep the **Container** preset, then add
 `PORT=80` and `MACROLENS_DB=/tmp/logs.duckdb` as environment variables.
 
-**Any VPS / Railway / Fly.io** — same image:
+**Any VPS / Railway / Fly.io** — same image. It serves on port 80 by default so
+that Vercel needs no extra configuration; override `PORT` elsewhere:
 
 ```bash
 docker build -t macrolens .
-docker run -p 7860:7860 macrolens
+docker run -p 80:80 macrolens
+# or keep your own port:
+docker run -e PORT=7860 -p 7860:7860 macrolens
 ```
+
+Set `MACROLENS_DB=/tmp/logs.duckdb` too if the host's disk is read-only.
 
 **Render / Railway without Docker** — `Procfile` and `server/run.py` are
 included, but choose an instance with **≥2 GB RAM** or the model load fails.
@@ -185,18 +190,20 @@ included, but choose an instance with **≥2 GB RAM** or the model load fails.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `PORT` | `7860` | Port to bind. Vercel needs `80`. |
-| `MACROLENS_DB` | `data/logs.duckdb` | Point the log somewhere else. Vercel has no writable disk except `/tmp`, so set `/tmp/logs.duckdb` there. |
+| `PORT` | `80` | Port to bind. Vercel's Container runtime expects 80. |
+| `MACROLENS_DB` | `data/logs.duckdb`, or `/tmp/logs.duckdb` when `VERCEL` is set | Where the DuckDB log lives. |
 | `MACROLENS_DEMO` | `1` | Seed 40 demo meals when the log is empty, so a fresh deploy isn't a blank dashboard. Set to `0` for a clean instance. |
 
-> **Read this before judging the demo persistency.** DuckDB is an embedded
+> **Read this before judging the demo's persistence.** DuckDB is an embedded
 > single-writer database, and serverless hosts have no persistent disk. On
-> Vercel the log lives in `/tmp`, which is per-instance and wiped on cold
-> start — so a meal you log can disappear, and two concurrent instances can
-> each hold a different log. The app therefore re-seeds 40 demo meals whenever
-> it finds an empty log, which keeps the dashboard meaningfully populated.
-> For a real log that survives restarts, run this image on a host with a
-> volume mounted at `/app/data`.
+> Vercel the log lands in `/tmp` automatically, which is per-instance and
+> wiped on cold start — so a meal you log can disappear, and two concurrent
+> instances can each hold a different log. The app therefore re-seeds 40 demo
+> meals whenever it finds an empty log, which keeps the dashboard populated
+> instead of showing an empty state to whoever opens it first.
+>
+> For a log that actually survives restarts, run this image on a host with a
+> volume mounted at `/app/data` (and leave `MACROLENS_DB` unset).
 
 ## Design choices (and why)
 

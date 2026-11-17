@@ -12,8 +12,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-# MACROLENS_DB lets tests point at a throwaway file instead of the real log.
-DB_PATH = Path(os.environ["MACROLENS_DB"]) if os.environ.get("MACROLENS_DB") else DATA_DIR / "logs.duckdb"
+
+
+def _default_db_path() -> Path:
+    """Where the DuckDB log lives by default.
+
+    On Vercel the filesystem is read-only except for /tmp, and /tmp is
+    per-instance and wiped on cold start -- so a serverless deploy keeps its
+    log in /tmp and it resets whenever the instance recycles. Everywhere else
+    the log sits next to the code, which survives restarts.
+    """
+    if os.environ.get("VERCEL"):
+        return Path("/tmp/logs.duckdb")
+    return DATA_DIR / "logs.duckdb"
+
+
+# MACROLENS_DB lets tests (and deploys) point at a different file.
+DB_PATH = Path(os.environ["MACROLENS_DB"]) if os.environ.get("MACROLENS_DB") else _default_db_path()
 
 
 def _connect():
